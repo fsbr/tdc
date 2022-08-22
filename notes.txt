@@ -1,0 +1,6 @@
+its eomthing like keep the edge, but then just change the starting point
+dont get too hung up on the directionality of the graph
+
+nope... its that when i traverse, i update that edge
+
+i think i traverse and incrementally update the edges in the list
