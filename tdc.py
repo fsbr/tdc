@@ -30,7 +30,7 @@ class Cell:
         self.cleaned = False
 
         # for computing the adjacency
-        self.neighborCells = []
+        self.neighborList = []
 
 class TDC:
     def __init__(self):
@@ -47,7 +47,7 @@ class TDC:
         self.dbg = False
 
     def readObstacles(self):
-        inputFile = open("input.txt", "r")
+        inputFile = open("input2.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -214,32 +214,41 @@ class TDC:
                 print("c", c)
                 self.printCell(initialCell)
                 self.closed.append(initialCell)
+
                 botCell = Cell()
                 topCell = Cell()
 
-                # do whatever calculations
-                firstEdgeFloorBot = Edge()
-                firstEdgeFloorBot.source_state = f
-
-                firstEdgeCeilBot = Edge()
-                firstEdgeCeilBot.source_state = current_event.location
-                # append this to open
 
                 botCell.floorList.append(copy.copy(self.closed[-1].floorList[-1]))
+                botCell.floorList[-1].endPoint = None
+                botCell.floorList[-1].startPoint = f
+
                 botCell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
+                botCell.ceilingList[-1].endPoint = None
+                botCell.ceilingList[-1].startPoint = current_event.location 
 
-                # conversely for the top cell
-                firstEdgeFloorTop = Edge()
-                firstEdgeFloorTop.source_state = current_event.location
+                botCell.neighborList.append(initialCell)
 
-                firstEdgeCeilTop = Edge()
-                firstEdgeCeilTop.source_state = c
 
+                # conversely for the top cell...
                 topCell.floorList.append(copy.copy(current_event.floorPointer[-1]))
-                topCell.ceilingList.append(copy.copy(self.closed[-1].ceilingList[-1]))
+                topCell.floorList[-1].endPoint = None
+                topCell.floorList[-1].startPoint = current_event.location
 
+                topCell.ceilingList.append(copy.copy(self.closed[-1].ceilingList[-1]))
+                topCell.ceilingList[-1].endPoint = None
+                topCell.ceilingList[-1].startPoint = c
+
+                topCell.neighborList.append(initialCell)
+
+                # append this to open
                 self.open.append(botCell)
                 self.open.append(topCell)
+    
+                self.closed[-1].neighborList.insert(0, topCell)
+                self.closed[-1].neighborList.insert(0, botCell)
+
+                
 
             elif current_event.type == "IN" and self.cellCount !=0:
                 self.connectivity+=1
@@ -260,8 +269,8 @@ class TDC:
                 print("Active Index", activeIndex)
                 print("Printing Current Cell")
                 self.printCell(current_cell)
-
                 current_cell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
+
             elif current_event.type == "OUT":
                 self.connectivity -= 1
                 activeIndex = self.determineCellBounds( current_intersections, current_event) 
@@ -270,20 +279,11 @@ class TDC:
 
                 f = self.findIntersection(botCell.floorList[-1], current_event)
                 botCell.floorList[-1].f = f
+                botCell.floorList[-1].endPoint = f
 
                 c = self.findIntersection(topCell.ceilingList[-1], current_event)
                 topCell.ceilingList[-1].c = c
-
-
-                # close the cells
-                self.closed.append(botCell)
-                self.closed.append(topCell)
-
-                # neighbor stuff?
-
-                # remove the cells from open
-                self.open.remove(botCell)
-                self.open.remove(topCell)
+                topCell.ceilingList[-1].endPoint = c
 
                 # "next, a new cell is to be opened"....
                 cellToAdd = Cell()
@@ -297,6 +297,22 @@ class TDC:
                 cellToAdd.ceilingList[-1].endPoint= None
     
                 self.open.insert(activeIndex[0], cellToAdd)
+
+                botCell.neighborList.append(cellToAdd)
+                topCell.neighborList.append(cellToAdd)
+
+                cellToAdd.neighborList.append(botCell)
+                cellToAdd.neighborList.append(topCell)
+
+                # close the cells
+                self.closed.append(botCell)
+                self.closed.append(topCell)
+
+
+                # remove the cells from open
+                self.open.remove(botCell)
+                self.open.remove(topCell)
+
             
             else:
                 print("Invalid Event Type")
@@ -443,6 +459,11 @@ class TDC:
             print("fe.c = ", fe.c)
             print("fe.startPoint = ", fe.startPoint)
             print("fe.endPoint = ", fe.endPoint)
+
+        print("NeighborList: ", cell.neighborList)
+        print("Visited: ", cell.visited)
+        print("Cleaned: ", cell.visited)
+        
         
 
 if __name__ == "__main__":
@@ -453,7 +474,7 @@ if __name__ == "__main__":
 
     print(" CHECKING THE Cells")
     for j, cell in enumerate(tdc.closed):
-        print(" NEW Cell ", j)
+        print(" NEW Cell ", j, cell)
         tdc.printCell(cell)
         print(" ")
         print(" *** ")
