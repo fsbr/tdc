@@ -146,6 +146,7 @@ class TDC:
 
     # slice control?
     def makeCells(self):
+        self.connectivity = 1
         self.cellCount = 0
         initialCell = Cell()
         self.topEdge = Edge()
@@ -196,10 +197,12 @@ class TDC:
             # finally sort this by second element
             current_intersections.sort(key = lambda x: x[1])
             print("Post Filter Current Intersections", current_intersections)
-        
+       
+             
             #print("length of reference events", len(self.reference_events))
             # skeleton for processing "event point schedule" 
             if current_event.type == "IN" and self.cellCount == 0:
+                self.connectivity+=1
                 # i kind of want UNIQUE edges in the cell list
                 c = self.findIntersection(initialCell.ceilingList[-1], current_event)
                 f = self.findIntersection(initialCell.floorList[-1], current_event)
@@ -237,14 +240,15 @@ class TDC:
                 self.open.append(topCell)
 
             elif current_event.type == "IN" and self.cellCount !=0:
+                self.connectivity+=1
                 # this will go unused in our first example
                 pass
             elif current_event.type == "FLOOR":
                 activeIndex = self.determineCellBounds(current_intersections, current_event)
                 current_cell = self.open[activeIndex]
                 print("Active Index", activeIndex)
+                print("Printing Current Cell")
                 self.printCell(current_cell)
-                
                 # follow the instructions of the paper
                 current_cell.floorList.append(current_event.floorPointer[-1])
                     
@@ -252,17 +256,45 @@ class TDC:
                 activeIndex = self.determineCellBounds(current_intersections, current_event)
                 current_cell = self.open[activeIndex]
                 print("Active Index", activeIndex)
+                print("Printing Current Cell")
                 self.printCell(current_cell)
 
                 current_cell.ceilingList.append(current_event.ceilingPointer[-1])
             elif current_event.type == "OUT":
-                pass
+                self.connectivity -= 1
+                activeIndex = self.determineCellBounds( current_intersections, current_event) 
+                botCell = self.open[activeIndex[0]]
+                topCell = self.open[activeIndex[1]]
+
+                f = self.findIntersection(botCell.floorList[-1], current_event)
+                botCell.floorList[-1].f = f
+
+                c = self.findIntersection(topCell.ceilingList[-1], current_event)
+                topCell.ceilingList[-1].c = c
+
+
+                # close the cells
+                self.closed.append(botCell)
+                self.closed.append(topCell)
+
+                # neighbor stuff?
+
+                # remove the cells from open
+                self.open.remove(botCell)
+                self.open.remove(topCell)
+
+                # "next, a new cell is to be opened"....
+                cellToAdd = Cell()
+                #cellToAdd.
+                
+    
+            
             else:
                 print("Invalid Event Type")
 
     def determineCellBounds(self, intersections, current_event):
         # given the connectivity and a list of the current slice intersections, 
-        # output the bounds of the thing
+        # output the Index of the active cell in Open 
         bounds = []
         modulo = len(intersections)%2
         if modulo == 0:
@@ -282,7 +314,41 @@ class TDC:
                             return bounds.index(b)
         else:
             # if number of intersections is odd, its an IN/OUT event
-            pass     
+            # every other pair of bounds represents a cell, except for the two that bound the out event also represent
+            # the cell
+            return_indices = []
+            print("This is an IN//OUT EVENT")
+            print("Event Location = ", current_event.location)
+            print("Index", intersections.index(current_event.location))
+            idx = intersections.index(current_event.location)
+            print("Intersections = ", intersections)
+            L = len(intersections)
+            for i in range(0, L-1):
+                if i%2 == 0:
+                    lb = intersections[i][1]
+                    ub = intersections[i+1][1]
+                    bounds.append( (lb, ub) )
+                    print("bounds")
+                if i == idx:
+                    # i fucking hate this code
+                    # like the if moduluo == 0 is so pointless but im too underslept to actually figure out a good solution
+                    # also its just such a huge thing for what its doing
+                    lb = intersections[i-1][1]
+                    ub = intersections[i][1]
+                    bounds.append( (lb, ub) )
+
+                    lb = intersections[i+1][1]
+                    ub = intersections[i][1]
+                    bounds.append( (lb, ub) )
+
+            bounds = [*set(bounds)]
+            print("bounds in odd numbered case", bounds)
+            for b in bounds:
+                if current_event.location[1] == b[0] or current_event.location[1] == b[1]:
+                    print("FOUND IN BOUND at INDEX == ", bounds.index(b))
+                    return_indices.append(bounds.index(b))
+            return return_indices
+
     def findIntersection(self, edge, event):
         #print("find intersection")
         #print("edge", edge)
