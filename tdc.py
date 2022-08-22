@@ -207,7 +207,9 @@ class TDC:
                 c = self.findIntersection(initialCell.ceilingList[-1], current_event)
                 f = self.findIntersection(initialCell.floorList[-1], current_event)
                 initialCell.ceilingList[-1].c = c
+                initialCell.ceilingList[-1].endPoint = c
                 initialCell.floorList[-1].f = f
+                initialCell.floorList[-1].endPoint = f
                 print("f", f)
                 print("c", c)
                 self.printCell(initialCell)
@@ -223,8 +225,8 @@ class TDC:
                 firstEdgeCeilBot.source_state = current_event.location
                 # append this to open
 
-                botCell.floorList.append(self.closed[-1].floorList[-1])
-                botCell.ceilingList.append(current_event.ceilingPointer[-1])
+                botCell.floorList.append(copy.copy(self.closed[-1].floorList[-1]))
+                botCell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
 
                 # conversely for the top cell
                 firstEdgeFloorTop = Edge()
@@ -233,8 +235,8 @@ class TDC:
                 firstEdgeCeilTop = Edge()
                 firstEdgeCeilTop.source_state = c
 
-                topCell.floorList.append(current_event.floorPointer[-1])
-                topCell.ceilingList.append(self.closed[-1].ceilingList[-1])
+                topCell.floorList.append(copy.copy(current_event.floorPointer[-1]))
+                topCell.ceilingList.append(copy.copy(self.closed[-1].ceilingList[-1]))
 
                 self.open.append(botCell)
                 self.open.append(topCell)
@@ -250,7 +252,7 @@ class TDC:
                 print("Printing Current Cell")
                 self.printCell(current_cell)
                 # follow the instructions of the paper
-                current_cell.floorList.append(current_event.floorPointer[-1])
+                current_cell.floorList.append(copy.copy(current_event.floorPointer[-1]))
                     
             elif current_event.type == "CEILING":
                 activeIndex = self.determineCellBounds(current_intersections, current_event)
@@ -259,7 +261,7 @@ class TDC:
                 print("Printing Current Cell")
                 self.printCell(current_cell)
 
-                current_cell.ceilingList.append(current_event.ceilingPointer[-1])
+                current_cell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
             elif current_event.type == "OUT":
                 self.connectivity -= 1
                 activeIndex = self.determineCellBounds( current_intersections, current_event) 
@@ -285,12 +287,22 @@ class TDC:
 
                 # "next, a new cell is to be opened"....
                 cellToAdd = Cell()
-                #cellToAdd.
-                
+                cellToAdd.floorList.append(copy.copy(botCell.floorList[-1]))
+                cellToAdd.ceilingList.append(copy.copy(topCell.ceilingList[-1]))
+
+                cellToAdd.floorList[-1].startPoint = f
+                cellToAdd.floorList[-1].endPoint = None
+
+                cellToAdd.ceilingList[-1].startPoint = c
+                cellToAdd.ceilingList[-1].endPoint= None
     
+                self.open.insert(activeIndex[0], cellToAdd)
             
             else:
                 print("Invalid Event Type")
+       
+        # there should just be one cell left at the last OUT event 
+        self.closed.append(self.open[-1])
 
     def determineCellBounds(self, intersections, current_event):
         # given the connectivity and a list of the current slice intersections, 
@@ -342,6 +354,7 @@ class TDC:
                     bounds.append( (lb, ub) )
 
             bounds = [*set(bounds)]
+            bounds.sort(key = lambda x: x[0])
             print("bounds in odd numbered case", bounds)
             for b in bounds:
                 if current_event.location[1] == b[0] or current_event.location[1] == b[1]:
@@ -420,12 +433,16 @@ class TDC:
             print("target state = ", ce.target_state)
             print("ce.f = ", ce.f)
             print("ce.c = ", ce.c)
+            print("ce.startPoint = ", ce.startPoint)
+            print("ce.endPoint = ", ce.endPoint) 
         for fe in cell.floorList:
             print("FLOOR EDGE")
             print("source state = ", fe.source_state)
             print("target state = ", fe.target_state)
             print("fe.f = ", fe.f)
             print("fe.c = ", fe.c)
+            print("fe.startPoint = ", fe.startPoint)
+            print("fe.endPoint = ", fe.endPoint)
         
 
 if __name__ == "__main__":
@@ -433,3 +450,10 @@ if __name__ == "__main__":
     obstacles = tdc.readObstacles()
     tdc.makeEvents(obstacles)
     tdc.makeCells()
+
+    print(" CHECKING THE Cells")
+    for j, cell in enumerate(tdc.closed):
+        print(" NEW Cell ", j)
+        tdc.printCell(cell)
+        print(" ")
+        print(" *** ")
