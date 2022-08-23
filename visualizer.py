@@ -11,6 +11,36 @@ class Visualizer:
         print(self.tdc.closed)
         print("initial cell", self.tdc.closed[0])
 
+    def floorAndCeilingEdges(self):
+        for cell in self.tdc.closed:
+            for f_edge in cell.floorList:
+                print("edge", f_edge) 
+
+    def getEndpoints(self, myList):
+        cminx = np.Inf 
+        cminy = 0 
+        cmaxx = -np.Inf
+        cmaxy = 0
+        for edge in myList:
+            # find the minimum edge.source_state
+            print("e.s.x,y", edge.source_state[0], edge.source_state[1])      
+            if edge.source_state[0] < cminx:
+                cminx = edge.source_state[0]
+                cminy = edge.source_state[1]
+            if edge.target_state[0] < cminx:
+                cminx = edge.target_state[0]
+                cminy = edge.target_state[1]
+           
+            if edge.source_state[0] > cmaxx:
+                cmaxx = edge.source_state[0]
+                cmaxy = edge.source_state[1]
+            if edge.target_state[0] > cmaxx:
+                cmaxx = edge.target_state[0]
+                cmaxy = edge.target_state[1]
+        print("ceiling points", cminx, cminy)
+        print("ceiling points", cmaxx, cmaxy)
+        return ((cminx, cminy) , (cmaxx, cmaxy))
+
     def plotAll(self):
         # plot obstacles
         print("self.tdc.obstacles", self.tdc.obstacles)
@@ -22,25 +52,43 @@ class Visualizer:
                 ys.append(vertex[1])
             plt.plot(xs+[xs[0]], ys+[ys[0]])
 
-
-        for cell in self.tdc.closed:
+        colors = ["blue", "red", "green", "orange"]
+        for jj, cell in enumerate(self.tdc.closed):
+            # this function is trying to do too much since it is plotting and processing the cell somehow
             print("\n\n NEW CELL \n\n")
             xs, ys = [], []
+            leftmost_x = np.Inf
+            rightmost_x = -np.Inf 
+            leftmost_y, rightmost_y = [],[]
             for edge in cell.ceilingList + cell.floorList:
                 if edge.startPoint != None:
-                    source_state = edge.startPoint
+                    edge.source_state = edge.startPoint
                 else:
-                    source_state = edge.source_state
+                    edge.source_state = edge.source_state
                 if edge.endPoint != None:
-                    target_state = edge.endPoint
+                    edge.target_state = edge.endPoint
                 else:
-                    target_state = edge.target_state
-                xs = [source_state[0], target_state[0]]
-                ys = [source_state[1], target_state[1]]
-                print("xs", xs)
-                print("ys", ys)
-    
-                plt.plot(xs,ys)
+                    edge.target_state = edge.target_state
+                xs = [edge.source_state[0], edge.target_state[0]]
+                ys = [edge.source_state[1], edge.target_state[1]]
+
+                print("Source Coordinate is, %s, %s"%(edge.source_state[0], edge.source_state[1]))
+                print("Target Coordinate is, %s, %s"%(edge.target_state[0], edge.target_state[1]))
+                
+
+                plt.plot(xs,ys, color = colors[jj%len(colors)])
+
+           
+            ce = self.getEndpoints(cell.ceilingList)
+            fe = self.getEndpoints(cell.floorList)
+            print("ce", ce)
+            print("fe", fe)
+            vminx = [ce[0][0], fe[0][0]]
+            vminy = [ce[0][1], fe[0][1]]
+            vmaxx = [ce[-1][0], fe[-1][0]]
+            vmaxy = [ce[-1][1], fe[-1][1]]
+            plt.plot(vminx, vminy, color = colors[jj%len(colors)])
+            plt.plot(vmaxx, vmaxy, color = colors[jj%len(colors)])
         #plt.axis("equal")
         plt.xlim((-10,15))
         plt.ylim((-10,15))

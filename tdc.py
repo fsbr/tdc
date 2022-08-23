@@ -33,6 +33,13 @@ class Cell:
         # for computing the adjacency
         self.neighborList = []
 
+        # omfg
+        self.minFloor = None
+        self.maxFloor = None
+
+        self.minCeiling = None
+        self.maxCeiling = None
+
 class TDC:
     def __init__(self):
         self.eventsList = []
@@ -126,6 +133,7 @@ class TDC:
 
                     floorEdgeToAdd = Edge()
                     floorEdgeToAdd.source_state = obstacle[i]
+                    print("obstacle[i]", obstacle[i])
                     floorEdgeToAdd.target_state = obstacle[i+1]
                     eventToAdd.floorPointer.append(floorEdgeToAdd)
 
@@ -198,7 +206,6 @@ class TDC:
             # finally sort this by second element
             current_intersections.sort(key = lambda x: x[1])
             print("Post Filter Current Intersections", current_intersections)
-       
              
             #print("length of reference events", len(self.reference_events))
             # skeleton for processing "event point schedule" 
@@ -486,4 +493,5 @@ if __name__ == "__main__":
 
     gv = Visualizer(tdc)
     gv.printStuff()
+    gv.floorAndCeilingEdges()
     gv.plotAll()
