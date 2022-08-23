@@ -55,7 +55,8 @@ class TDC:
         self.dbg = False
 
     def readObstacles(self):
-        inputFile = open("input.txt", "r")
+        #inputFile = open("inputfloat.txt", "r")
+        inputFile = open("input1.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -133,7 +134,6 @@ class TDC:
 
                     floorEdgeToAdd = Edge()
                     floorEdgeToAdd.source_state = obstacle[i]
-                    print("obstacle[i]", obstacle[i])
                     floorEdgeToAdd.target_state = obstacle[i+1]
                     eventToAdd.floorPointer.append(floorEdgeToAdd)
 
@@ -255,14 +255,14 @@ class TDC:
     
                 self.closed[-1].neighborList.insert(0, topCell)
                 self.closed[-1].neighborList.insert(0, botCell)
+                self.cellCount+=1
 
                 
 
             elif current_event.type == "IN" and self.cellCount !=0:
                 self.connectivity+=1
-                # this will go unused in our first example
-                # need to find the active cell, then SPLIT that one into 2 MORE cells
-                pass
+                print("I HIT MY SECOND IN EVENT BUT IDK WHAT TO DO")
+                quit()
             elif current_event.type == "FLOOR":
                 activeIndex = self.determineCellBounds(current_intersections, current_event)
                 current_cell = self.open[activeIndex]

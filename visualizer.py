@@ -50,7 +50,7 @@ class Visualizer:
                 plt.scatter(vertex[0], vertex[1], color = "#AAAAAA")
                 xs.append(vertex[0])
                 ys.append(vertex[1])
-            plt.plot(xs+[xs[0]], ys+[ys[0]])
+            #plt.plot(xs+[xs[0]], ys+[ys[0]])
 
         colors = ["blue", "red", "green", "orange"]
         for jj, cell in enumerate(self.tdc.closed):
@@ -62,11 +62,19 @@ class Visualizer:
             leftmost_y, rightmost_y = [],[]
             for edge in cell.ceilingList + cell.floorList:
                 if edge.startPoint != None:
-                    edge.source_state = edge.startPoint
+                    tmp = edge.startPoint
+                    if edge.source_state[0]> tmp[0]:
+                        edge.target_state = tmp
+                    else:
+                        edge.source_state = tmp
                 else:
                     edge.source_state = edge.source_state
                 if edge.endPoint != None:
-                    edge.target_state = edge.endPoint
+                    tmp = edge.endPoint
+                    if edge.target_state[0] < tmp[0]:
+                        edge.source_state = tmp
+                    else:
+                        edge.target_state = tmp
                 else:
                     edge.target_state = edge.target_state
                 xs = [edge.source_state[0], edge.target_state[0]]
@@ -76,7 +84,7 @@ class Visualizer:
                 print("Target Coordinate is, %s, %s"%(edge.target_state[0], edge.target_state[1]))
                 
 
-                plt.plot(xs,ys, color = colors[jj%len(colors)])
+                plt.plot(xs, ys, color = colors[jj%len(colors)])
 
            
             ce = self.getEndpoints(cell.ceilingList)
