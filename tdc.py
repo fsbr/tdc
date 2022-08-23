@@ -69,8 +69,8 @@ class TDC:
                 obstacles.append(obstacle)
             lineNumber+=1
         self.obstacles = obstacles
-        #print(obstacles)
-        #print("OBSTACLES", obstacles)
+        print(obstacles)
+        print("OBSTACLES", obstacles)
         return self.obstacles
 
     def getSweepLineIntersections(self, event):
@@ -253,6 +253,7 @@ class TDC:
             elif current_event.type == "IN" and self.cellCount !=0:
                 self.connectivity+=1
                 # this will go unused in our first example
+                # need to find the active cell, then SPLIT that one into 2 MORE cells
                 pass
             elif current_event.type == "FLOOR":
                 activeIndex = self.determineCellBounds(current_intersections, current_event)
