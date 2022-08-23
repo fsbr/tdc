@@ -3,6 +3,7 @@ import sys
 import heapq
 import copy
 from shapely.geometry import LineString
+from visualizer import Visualizer
 
 class Edge:
     def __init__(self):
@@ -47,7 +48,7 @@ class TDC:
         self.dbg = False
 
     def readObstacles(self):
-        inputFile = open("input2.txt", "r")
+        inputFile = open("input.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -479,3 +480,10 @@ if __name__ == "__main__":
         tdc.printCell(cell)
         print(" ")
         print(" *** ")
+
+
+
+
+    gv = Visualizer(tdc)
+    gv.printStuff()
+    gv.plotAll()
