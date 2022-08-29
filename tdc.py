@@ -56,7 +56,7 @@ class TDC:
 
     def readObstacles(self):
         #inputFile = open("inputfloat.txt", "r")
-        inputFile = open("input1.txt", "r")
+        inputFile = open("input.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -81,12 +81,6 @@ class TDC:
         print(obstacles)
         print("OBSTACLES", obstacles)
         return self.obstacles
-
-    def getSweepLineIntersections(self, event):
-        # this function should be called at each even, and find the intersections
-        # of the edges with the sweep line at the event
-        # returns intersections: a list of intersections 
-        return intersections
 
     def makeEvents(self, obstacles):
         obstacles = self.obstacles
@@ -259,10 +253,10 @@ class TDC:
 
                 
 
-            elif current_event.type == "IN" and self.cellCount !=0:
-                self.connectivity+=1
-                print("I HIT MY SECOND IN EVENT BUT IDK WHAT TO DO")
-                quit()
+            #elif current_event.type == "IN" and self.cellCount !=0:
+            #    self.connectivity+=1
+            #    print("I HIT MY SECOND IN EVENT BUT IDK WHAT TO DO")
+            #    #quit()
             elif current_event.type == "FLOOR":
                 activeIndex = self.determineCellBounds(current_intersections, current_event)
                 current_cell = self.open[activeIndex]
