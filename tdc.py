@@ -55,8 +55,8 @@ class TDC:
         self.dbg = False
 
     def readObstacles(self):
-        #inputFile = open("inputfloat.txt", "r")
-        inputFile = open("input.txt", "r")
+        inputFile = open("inputfloat.txt", "r")
+        #inputFile = open("input2.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -108,6 +108,7 @@ class TDC:
                     floorEdgeToAdd.source_state = obstacle[i-1]
                     floorEdgeToAdd.target_state = obstacle[i]
                     eventToAdd.floorPointer.append(floorEdgeToAdd)
+
                 elif vertex[0] > prior_x and vertex[0] < next_x:
                     print("CEILING EVENT at ", vertex)
                     eventToAdd.type = "CEILING"
@@ -253,10 +254,12 @@ class TDC:
 
                 
 
-            #elif current_event.type == "IN" and self.cellCount !=0:
-            #    self.connectivity+=1
-            #    print("I HIT MY SECOND IN EVENT BUT IDK WHAT TO DO")
-            #    #quit()
+            elif current_event.type == "IN" and self.cellCount !=0:
+                self.connectivity+=1
+                print("I HIT MY SECOND IN EVENT BUT IDK WHAT TO DO")
+                activeIndex = self.determineCellBounds(current_intersections, current_event)
+                print("activeIndex", activeIndex)
+                quit()
             elif current_event.type == "FLOOR":
                 activeIndex = self.determineCellBounds(current_intersections, current_event)
                 current_cell = self.open[activeIndex]
@@ -326,6 +329,8 @@ class TDC:
     def determineCellBounds(self, intersections, current_event):
         # given the connectivity and a list of the current slice intersections, 
         # output the Index of the active cell in Open 
+        # What I really want is for this to output a tuple:
+        # IN EVENT the first element in the tuple is the index of the cell to be closed 
         bounds = []
         modulo = len(intersections)%2
         if modulo == 0:
@@ -350,27 +355,17 @@ class TDC:
             return_indices = []
             print("This is an IN//OUT EVENT")
             print("Event Location = ", current_event.location)
+            print("AMBER IS THE BEST GENSHIN CHARACTER")
             print("Index", intersections.index(current_event.location))
             idx = intersections.index(current_event.location)
             print("Intersections = ", intersections)
             L = len(intersections)
             for i in range(0, L-1):
-                if i%2 == 0:
-                    lb = intersections[i][1]
-                    ub = intersections[i+1][1]
-                    bounds.append( (lb, ub) )
-                    print("bounds")
-                if i == idx:
-                    # i fucking hate this code
-                    # like the if moduluo == 0 is so pointless but im too underslept to actually figure out a good solution
-                    # also its just such a huge thing for what its doing
-                    lb = intersections[i-1][1]
-                    ub = intersections[i][1]
-                    bounds.append( (lb, ub) )
-
-                    lb = intersections[i+1][1]
-                    ub = intersections[i][1]
-                    bounds.append( (lb, ub) )
+                if intersections[i] == current_event.location:
+                    print("event intersection is ", i)
+                lb = intersections[i][1]
+                ub = intersections[i+1][1]
+                bounds.append( (lb, ub) )
 
             bounds = [*set(bounds)]
             bounds.sort(key = lambda x: x[0])
