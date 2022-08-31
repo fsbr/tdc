@@ -23,6 +23,7 @@ class Visualizer:
         cmaxy = 0
         for edge in myList:
             # find the minimum edge.source_state
+            print(" I AM BLIND")
             print("e.s.x,y", edge.source_state[0], edge.source_state[1])      
             if edge.source_state[0] < cminx:
                 cminx = edge.source_state[0]
@@ -60,23 +61,51 @@ class Visualizer:
             leftmost_x = np.Inf
             rightmost_x = -np.Inf 
             leftmost_y, rightmost_y = [],[]
+            print(cell.ceilingList + cell.floorList)
+            # what this loop is suppose to do is assign source_state and target_state based on the 
+            # thing, f,c 
             for edge in cell.ceilingList + cell.floorList:
-                if edge.startPoint != None:
-                    tmp = edge.startPoint
-                    if edge.source_state[0]> tmp[0]:
-                        edge.target_state = tmp
-                    else:
-                        edge.source_state = tmp
-                else:
-                    edge.source_state = edge.source_state
-                if edge.endPoint != None:
+                print("\n\n edge edge edge")
+                print("edge.source_state", edge.source_state)
+                print("edge.target_state", edge.target_state)
+                print("edge.startPoint", edge.startPoint)
+                print("edge.endPoint", edge.endPoint)
+                #print("edge.startPoint", edge.startPoint)
+                print("\n\n edge edge edge")
+                if edge.endPoint != None or edge.endPoint != False:
                     tmp = edge.endPoint
-                    if edge.target_state[0] < tmp[0]:
-                        edge.source_state = tmp
-                    else:
+                    if edge.source_state[0] < tmp[0]:
                         edge.target_state = tmp
-                else:
-                    edge.target_state = edge.target_state
+                    else:
+                        edge.source_state = tmp
+
+                if edge.startPoint != None or edge.startPoint != False:
+                    tmp = edge.startPoint
+                    if edge.source_state[0] > tmp[0]:
+                        edge.target_state = tmp
+                    else:
+                        edge.source_state = tmp
+            
+                #if edge.startPoint != False or edge.startPoint!=None:
+                #    tmp = edge.startPoint
+                #    print("tmp", tmp)
+                #    print("edge.source_state", edge.source_state)
+                #    if edge.source_state[0]> tmp[0]:
+                #        edge.target_state = tmp
+                #    else:
+                #        edge.source_state = tmp
+                #else:
+                #    edge.source_state = edge.source_state
+                #if edge.endPoint != False or edge.endPoint != None:
+                #    print("edge.endPoint", edge.endPoint)
+                #    tmp = edge.endPoint
+                #    print("tmp", tmp)
+                #    if edge.target_state[0] < tmp[0]:
+                #        edge.source_state = tmp
+                #    else:
+                #        edge.target_state = tmp
+                #else:
+                #    edge.target_state = edge.target_state
                 xs = [edge.source_state[0], edge.target_state[0]]
                 ys = [edge.source_state[1], edge.target_state[1]]
 

@@ -63,9 +63,9 @@ class TDC:
     def readObstacles(self):
         #inputFile = open("inputfloat.txt", "r")
         #inputFile = open("input3.txt", "r")
-        #inputFile = open("input2.txt", "r")
+        inputFile = open("input2.txt", "r")
         #inputFile = open("input.txt", "r")
-        inputFile = open("input4.txt", "r")
+        #inputFile = open("input4.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -210,6 +210,8 @@ class TDC:
                 current_cell_locations.append(i)
         print("for the event type", event_type)
         print("current cell locations", current_cell_locations)
+
+        return (current_cell_locations, safe_intervals)
        
     def find_all_intersections(self, current_event): 
         current_intersections = []
@@ -257,6 +259,7 @@ class TDC:
         print("IN MAKE CELLS 2")
 
         # place the initial cell into the open list
+        self.open.append(initialCell)
         while len(self.eventsList) > 0:
             
 
@@ -267,99 +270,42 @@ class TDC:
             print("current_event.location", current_event.location)
             print("current_event.type", current_event.type)
             current_intersections = self.find_all_intersections(current_event)
-            sweep_line_control_indices = self.slice_control(current_event, current_intersections)
-
+            sweep_line_control = self.slice_control(current_event, current_intersections)
 
             if current_event.type == "IN":
+                print("PROCESSING OF AN IN EVENT")
+                print("sweep_line_control_indices", sweep_line_control)
                 self.connectivity +=1 
-            elif current_event.type == "FLOOR":
-                pass
-            elif current_event.type == "CEILING":
-                pass
-            elif current_event.type == "OUT":
-                self.connectivity-=1
+                # I have an assumption right now that the lower index is always indicating the cell
+                # to close, so if stuff stops working for whatever reason, that's probably what's wrong
+                
+                index_to_close = sweep_line_control[0][0]
+                indices_to_open = sweep_line_control[0]
 
+                cell_to_close = self.open[index_to_close]
+                print("cell_to_close, index_to_close", cell_to_close, index_to_close)
 
-            print("self.connectivity", self. connectivity)
-            print("current_intersections", current_intersections)
-            
-
-
-
-    def makeCells(self):
-        self.connectivity = 1
-        self.cellCount = 0
-        initialCell = Cell()
-        self.topEdge = Edge()
-        self.topEdge.source_state  = (0,  self.yMax)
-        self.topEdge.target_state = (self.xMax, self.yMax)
-
-        self.botEdge = Edge()
-        self.botEdge.source_state = (0,0)
-        self.botEdge.target_state = (self.xMax, 0)
-
-        initialCell.ceilingList.append(self.topEdge)
-        initialCell.floorList.append(self.botEdge)
-        
-        # this is a hack but we are gonna let it rip
-        self.reference_events = self.eventsList.copy()
-
-        while len(self.eventsList) > 0:
-            curr = heapq.heappop(self.eventsList)
-            current_event = curr[2]
-            print("curr", curr, current_event)
-            print("current_event.location", current_event.location)
-            print("current_event.type", current_event.type)
-
-            # check for intersections
-            # first within the reference events
-            current_intersections = []
-            for r_event in self.reference_events:
-                r_event = r_event[2]
-                #print("r_event", r_event)
-                #print("r_event.ceilingPointer", r_event.ceilingPointer)
-                #print("r_event.floorPointer", r_event.floorPointer)
-                for edges in r_event.ceilingPointer + r_event.floorPointer:
-                    intersect = self.findIntersection(edges, current_event)
-                    current_intersections.append(intersect)
-
-            ibot = self.findIntersection(self.botEdge, current_event)
-            itop = self.findIntersection(self.topEdge, current_event)
-
-            current_intersections.append(ibot)
-            current_intersections.append(itop)
-
-            # quick filtering on current_intersections
-            # this notation forms the set
-            current_intersections = [*set(current_intersections)]
-            if False in current_intersections:
-                current_intersections.remove(False)
-
-            # finally sort this by second element
-            current_intersections.sort(key = lambda x: x[1])
-            print("Post Filter Current Intersections", current_intersections)
-             
-            #print("length of reference events", len(self.reference_events))
-            # skeleton for processing "event point schedule" 
-            if current_event.type == "IN" and self.cellCount == 0:
-                self.connectivity+=1
-                # i kind of want UNIQUE edges in the cell list
-                c = self.findIntersection(initialCell.ceilingList[-1], current_event)
-                f = self.findIntersection(initialCell.floorList[-1], current_event)
-                initialCell.ceilingList[-1].c = c
-                initialCell.ceilingList[-1].endPoint = c
-                initialCell.floorList[-1].f = f
-                initialCell.floorList[-1].endPoint = f
+                # Calculations on the cell we are CLOSING
+                c = self.findIntersection(cell_to_close.ceilingList[-1], current_event)
+                f = self.findIntersection(cell_to_close.floorList[-1], current_event)
+                cell_to_close.ceilingList[-1].c = c
+                cell_to_close.ceilingList[-1].endPoint = c
+                cell_to_close.floorList[-1].f = f
+                cell_to_close.floorList[-1].endPoint = f
                 print("f", f)
                 print("c", c)
-                self.printCell(initialCell)
-                self.closed.append(initialCell)
 
+                # close up the current cell
+                self.printCell(cell_to_close)
+                self.closed.append(cell_to_close)
+                self.open.remove(cell_to_close)
+
+                # two new cells are to be opened
                 botCell = Cell()
                 topCell = Cell()
 
 
-                botCell.floorList.append(copy.copy(self.closed[-1].floorList[-1]))
+                botCell.floorList.append(copy.copy(cell_to_close.floorList[-1]))
                 botCell.floorList[-1].endPoint = None
                 botCell.floorList[-1].startPoint = f
 
@@ -367,8 +313,7 @@ class TDC:
                 botCell.ceilingList[-1].endPoint = None
                 botCell.ceilingList[-1].startPoint = current_event.location 
 
-                botCell.neighborList.append(initialCell)
-
+                botCell.neighborList.append(cell_to_close)
 
                 # conversely for the top cell...
                 topCell.floorList.append(copy.copy(current_event.floorPointer[-1]))
@@ -379,50 +324,54 @@ class TDC:
                 topCell.ceilingList[-1].endPoint = None
                 topCell.ceilingList[-1].startPoint = c
 
-                topCell.neighborList.append(initialCell)
+                topCell.neighborList.append(cell_to_close)
 
-                # append this to open
-                self.open.append(botCell)
-                self.open.append(topCell)
+                # append this to open IS 
+                # its weird becasue you are appending linearly and the number of elements changes
+                self.open.insert(indices_to_open[1],botCell)
+                self.open.insert(indices_to_open[1],topCell)
     
-                self.closed[-1].neighborList.insert(0, topCell)
-                self.closed[-1].neighborList.insert(0, botCell)
-                self.cellCount+=1
-
+                #self.closed[-1].neighborList.insert(0, topCell)
+                #self.closed[-1].neighborList.insert(0, botCell)
                 
-
-            elif current_event.type == "IN" and self.cellCount !=0:
-                self.connectivity+=1
-                print("I HIT MY SECOND IN EVENT BUT IDK WHAT TO DO")
-                activeIndex = self.determineCellBounds(current_intersections, current_event)
-                print("EVENT LOCATION", current_event.location)
-                print("CONNECTIVITY", self.connectivity)
-                print("activeIndex", activeIndex)
-                quit()
+                self.closed[-1].neighborList.append(topCell)
+                self.closed[-1].neighborList.append(botCell)
+                  
             elif current_event.type == "FLOOR":
-                activeIndex = self.determineCellBounds(current_intersections, current_event)
-                current_cell = self.open[activeIndex]
-                print("Active Index", activeIndex)
+                index_to_update = sweep_line_control[0][0]
+                current_cell = self.open[index_to_update]
+                print("\n\nself.open", self.open)
+                print("sweep_line_control", sweep_line_control)
+                print("index_to_update", index_to_update)
                 print("Printing Current Cell")
                 self.printCell(current_cell)
                 # follow the instructions of the paper
                 current_cell.floorList.append(copy.copy(current_event.floorPointer[-1]))
-                    
+
+
             elif current_event.type == "CEILING":
-                activeIndex = self.determineCellBounds(current_intersections, current_event)
-                current_cell = self.open[activeIndex]
-                print("Active Index", activeIndex)
+                print("PROCESSING A CEILING EDGE")
+                index_to_update = sweep_line_control[0][0]
+                current_cell = self.open[index_to_update]
+                print("sweep_line_control", sweep_line_control)
+                print("index_to_update", index_to_update)
                 print("Printing Current Cell")
                 self.printCell(current_cell)
+                # i wish i understood why copy.copy was needed here, maybe its not
                 current_cell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
 
             elif current_event.type == "OUT":
-                self.connectivity -= 1
-                activeIndex = self.determineCellBounds( current_intersections, current_event) 
-                botCell = self.open[activeIndex[0]]
-                topCell = self.open[activeIndex[1]]
+                self.connectivity-=1
+                index_to_open = sweep_line_control[0][0]
+                indices_to_close = sweep_line_control[0]
+
+                print("index_to_open", index_to_open)
+                print("indices_to_close", indices_to_close)
+                botCell = self.open[indices_to_close[0]]
+                topCell = self.open[indices_to_close[1]]
 
                 f = self.findIntersection(botCell.floorList[-1], current_event)
+                print("f", f)
                 botCell.floorList[-1].f = f
                 botCell.floorList[-1].endPoint = f
 
@@ -441,7 +390,7 @@ class TDC:
                 cellToAdd.ceilingList[-1].startPoint = c
                 cellToAdd.ceilingList[-1].endPoint= None
     
-                self.open.insert(activeIndex[0], cellToAdd)
+                self.open.insert(index_to_open, cellToAdd)
 
                 botCell.neighborList.append(cellToAdd)
                 topCell.neighborList.append(cellToAdd)
@@ -458,12 +407,197 @@ class TDC:
                 self.open.remove(botCell)
                 self.open.remove(topCell)
 
-            
-            else:
-                print("Invalid Event Type")
-       
+
+
+
+            print("self.connectivity", self. connectivity)
+            print("current_intersections", current_intersections)
         # there should just be one cell left at the last OUT event 
         self.closed.append(self.open[-1])
+            
+
+
+
+    #def makeCells(self):
+    #    self.connectivity = 1
+    #    self.cellCount = 0
+    #    initialCell = Cell()
+    #    self.topEdge = Edge()
+    #    self.topEdge.source_state  = (0,  self.yMax)
+    #    self.topEdge.target_state = (self.xMax, self.yMax)
+
+    #    self.botEdge = Edge()
+    #    self.botEdge.source_state = (0,0)
+    #    self.botEdge.target_state = (self.xMax, 0)
+
+    #    initialCell.ceilingList.append(self.topEdge)
+    #    initialCell.floorList.append(self.botEdge)
+    #    
+    #    # this is a hack but we are gonna let it rip
+    #    self.reference_events = self.eventsList.copy()
+
+    #    while len(self.eventsList) > 0:
+    #        curr = heapq.heappop(self.eventsList)
+    #        current_event = curr[2]
+    #        print("curr", curr, current_event)
+    #        print("current_event.location", current_event.location)
+    #        print("current_event.type", current_event.type)
+
+    #        # check for intersections
+    #        # first within the reference events
+    #        current_intersections = []
+    #        for r_event in self.reference_events:
+    #            r_event = r_event[2]
+    #            #print("r_event", r_event)
+    #            #print("r_event.ceilingPointer", r_event.ceilingPointer)
+    #            #print("r_event.floorPointer", r_event.floorPointer)
+    #            for edges in r_event.ceilingPointer + r_event.floorPointer:
+    #                intersect = self.findIntersection(edges, current_event)
+    #                current_intersections.append(intersect)
+
+    #        ibot = self.findIntersection(self.botEdge, current_event)
+    #        itop = self.findIntersection(self.topEdge, current_event)
+
+    #        current_intersections.append(ibot)
+    #        current_intersections.append(itop)
+
+    #        # quick filtering on current_intersections
+    #        # this notation forms the set
+    #        current_intersections = [*set(current_intersections)]
+    #        if False in current_intersections:
+    #            current_intersections.remove(False)
+
+    #        # finally sort this by second element
+    #        current_intersections.sort(key = lambda x: x[1])
+    #        print("Post Filter Current Intersections", current_intersections)
+    #         
+    #        #print("length of reference events", len(self.reference_events))
+    #        # skeleton for processing "event point schedule" 
+    #        if current_event.type == "IN" and self.cellCount == 0:
+    #            self.connectivity+=1
+    #            # i kind of want UNIQUE edges in the cell list
+    #            c = self.findIntersection(initialCell.ceilingList[-1], current_event)
+    #            f = self.findIntersection(initialCell.floorList[-1], current_event)
+    #            initialCell.ceilingList[-1].c = c
+    #            initialCell.ceilingList[-1].endPoint = c
+    #            initialCell.floorList[-1].f = f
+    #            initialCell.floorList[-1].endPoint = f
+    #            print("f", f)
+    #            print("c", c)
+    #            self.printCell(initialCell)
+    #            self.closed.append(initialCell)
+
+    #            botCell = Cell()
+    #            topCell = Cell()
+
+
+    #            botCell.floorList.append(copy.copy(self.closed[-1].floorList[-1]))
+    #            botCell.floorList[-1].endPoint = None
+    #            botCell.floorList[-1].startPoint = f
+
+    #            botCell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
+    #            botCell.ceilingList[-1].endPoint = None
+    #            botCell.ceilingList[-1].startPoint = current_event.location 
+
+    #            botCell.neighborList.append(initialCell)
+
+
+    #            # conversely for the top cell...
+    #            topCell.floorList.append(copy.copy(current_event.floorPointer[-1]))
+    #            topCell.floorList[-1].endPoint = None
+    #            topCell.floorList[-1].startPoint = current_event.location
+
+    #            topCell.ceilingList.append(copy.copy(self.closed[-1].ceilingList[-1]))
+    #            topCell.ceilingList[-1].endPoint = None
+    #            topCell.ceilingList[-1].startPoint = c
+
+    #            topCell.neighborList.append(initialCell)
+
+    #            # append this to open
+    #            self.open.append(botCell)
+    #            self.open.append(topCell)
+    #
+    #            self.closed[-1].neighborList.insert(0, topCell)
+    #            self.closed[-1].neighborList.insert(0, botCell)
+    #            self.cellCount+=1
+
+    #            
+
+    #        elif current_event.type == "IN" and self.cellCount !=0:
+    #            self.connectivity+=1
+    #            print("I HIT MY SECOND IN EVENT BUT IDK WHAT TO DO")
+    #            activeIndex = self.determineCellBounds(current_intersections, current_event)
+    #            print("EVENT LOCATION", current_event.location)
+    #            print("CONNECTIVITY", self.connectivity)
+    #            print("activeIndex", activeIndex)
+    #        elif current_event.type == "FLOOR":
+    #            activeIndex = self.determineCellBounds(current_intersections, current_event)
+    #            current_cell = self.open[activeIndex]
+    #            print("Active Index", activeIndex)
+    #            print("Printing Current Cell")
+    #            self.printCell(current_cell)
+    #            # follow the instructions of the paper
+    #            current_cell.floorList.append(copy.copy(current_event.floorPointer[-1]))
+    #                
+    #        elif current_event.type == "CEILING":
+    #            activeIndex = self.determineCellBounds(current_intersections, current_event)
+    #            current_cell = self.open[activeIndex]
+    #            print("Active Index", activeIndex)
+    #            print("Printing Current Cell")
+    #            self.printCell(current_cell)
+    #            current_cell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
+
+    #        elif current_event.type == "OUT":
+    #            self.connectivity -= 1
+    #            activeIndex = self.determineCellBounds( current_intersections, current_event) 
+    #            botCell = self.open[activeIndex[0]]
+    #            topCell = self.open[activeIndex[1]]
+
+    #            f = self.findIntersection(botCell.floorList[-1], current_event)
+    #            botCell.floorList[-1].f = f
+    #            botCell.floorList[-1].endPoint = f
+
+    #            c = self.findIntersection(topCell.ceilingList[-1], current_event)
+    #            topCell.ceilingList[-1].c = c
+    #            topCell.ceilingList[-1].endPoint = c
+
+    #            # "next, a new cell is to be opened"....
+    #            cellToAdd = Cell()
+    #            cellToAdd.floorList.append(copy.copy(botCell.floorList[-1]))
+    #            cellToAdd.ceilingList.append(copy.copy(topCell.ceilingList[-1]))
+
+    #            cellToAdd.floorList[-1].startPoint = f
+    #            cellToAdd.floorList[-1].endPoint = None
+
+    #            cellToAdd.ceilingList[-1].startPoint = c
+    #            cellToAdd.ceilingList[-1].endPoint= None
+    #
+    #            self.open.insert(activeIndex[0], cellToAdd)
+
+    #            botCell.neighborList.append(cellToAdd)
+    #            topCell.neighborList.append(cellToAdd)
+
+    #            cellToAdd.neighborList.append(botCell)
+    #            cellToAdd.neighborList.append(topCell)
+
+    #            # close the cells
+    #            self.closed.append(botCell)
+    #            self.closed.append(topCell)
+
+
+    #            # remove the cells from open
+    #            self.open.remove(botCell)
+    #            self.open.remove(topCell)
+    #            print("just trying to break")
+    #            quit()
+    #        
+    #        else:
+    #            print("Invalid Event Type")
+    #   
+    #        # there should just be one cell left at the last OUT event 
+    #        self.closed.append(self.open[-1])
+    #        print("QUITTING")
+    #        quit()
 
     def determineCellBounds(self, intersections, current_event):
         # given the connectivity and a list of the current slice intersections, 
@@ -522,8 +656,8 @@ class TDC:
 
         x1,y1 = edge.source_state[0], edge.source_state[1]
         x2, y2 = edge.target_state[0], edge.target_state[1]
-        #print("x1, y1", x1, y1)
-        #print("x2, y2", x2, y2)
+        print("x1, y1", x1, y1)
+        print("x2, y2", x2, y2)
 
         line = LineString([(x1, y1), (x2, y2)])
         sweep_line_x = event.location[0]
@@ -582,6 +716,7 @@ class TDC:
     def printCell(self, cell):
         for ce in cell.ceilingList:
             print("CEILING EDGE")
+            print("there are %s edges", len(cell.ceilingList))
             print("source state = ", ce.source_state)
             print("target state = ", ce.target_state)
             print("ce.f = ", ce.f)
@@ -590,6 +725,7 @@ class TDC:
             print("ce.endPoint = ", ce.endPoint) 
         for fe in cell.floorList:
             print("FLOOR EDGE")
+            print("there are %s edges", len(cell.floorList))
             print("source state = ", fe.source_state)
             print("target state = ", fe.target_state)
             print("fe.f = ", fe.f)
@@ -611,7 +747,7 @@ if __name__ == "__main__":
     #tdc.makeCells()
     tdc.makeCells2()
 
-    print(" CHECKING THE Cells")
+    print("\n\n CHECKING THE Cells")
     for j, cell in enumerate(tdc.closed):
         print(" NEW Cell ", j, cell)
         tdc.printCell(cell)
@@ -621,7 +757,7 @@ if __name__ == "__main__":
 
 
 
-    #gv = Visualizer(tdc)
-    #gv.printStuff()
-    #gv.floorAndCeilingEdges()
-    #gv.plotAll()
+    gv = Visualizer(tdc)
+    gv.printStuff()
+    gv.floorAndCeilingEdges()
+    gv.plotAll()
