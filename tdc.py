@@ -62,8 +62,10 @@ class TDC:
 
     def readObstacles(self):
         #inputFile = open("inputfloat.txt", "r")
+        #inputFile = open("input3.txt", "r")
         #inputFile = open("input2.txt", "r")
-        inputFile = open("input.txt", "r")
+        #inputFile = open("input.txt", "r")
+        inputFile = open("input4.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -136,7 +138,10 @@ class TDC:
 
                     floorEdgeToAdd = Edge()
                     floorEdgeToAdd.source_state = obstacle[i]
-                    floorEdgeToAdd.target_state = obstacle[i+1]
+                    print("i", i)
+                    print(" lenght of the obstacles", len(obstacle))
+                    # i think i do this over every one
+                    floorEdgeToAdd.target_state = obstacle[(i+1)%(len(obstacle))]
                     eventToAdd.floorPointer.append(floorEdgeToAdd)
 
                 elif vertex[0] < prior_x and vertex[0] > next_x:
@@ -156,6 +161,7 @@ class TDC:
             self.dbgEventsList() 
 
     # slice control?
+    # this was the key to the whole thing
     def slice_control(self, current_event, current_intersections):
         # Input: the event, and a list of the current intersections
         # Output: Relevant Index to "current" cell 
@@ -169,15 +175,15 @@ class TDC:
             a = current_intersections[i] 
             b = current_intersections[i+1]
             intervals.append((a,b))
-        print("Intervals", intervals)
-        print("corresponding event location", event_location)
+        #print("Intervals", intervals)
+        #print("corresponding event location", event_location)
 
         # flag the intervals as OK or NOT OK
         intervals_with_status = []
         safe = True
         if event_type == "IN" or event_type == "OUT":
             for i in range(0, len(intervals)):
-                print("intervals[i]", intervals[i])
+                #print("intervals[i]", intervals[i])
                 if event_location in intervals[i]:
                     safe = True 
                 else:
@@ -185,7 +191,7 @@ class TDC:
                 intervals_with_status.append((intervals[i], safe))
         if event_type == "FLOOR" or event_type == "CEILING":
             for i in range(0, len(intervals)):
-                print("intervals[i]", intervals[i])
+                #print("intervals[i]", intervals[i])
                 intervals_with_status.append((intervals[i], safe))
                 safe = not safe
 
@@ -247,13 +253,16 @@ class TDC:
         self.connectivity = 1
 
         self.reference_events = self.eventsList.copy()
+
         print("IN MAKE CELLS 2")
+
+        # place the initial cell into the open list
         while len(self.eventsList) > 0:
             
 
             curr = heapq.heappop(self.eventsList)
             current_event = curr[2]
-            print("POPPING EVENTS")
+            print("\n\nPOPPING EVENTS")
             print("curr", curr, current_event)
             print("current_event.location", current_event.location)
             print("current_event.type", current_event.type)
