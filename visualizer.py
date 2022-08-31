@@ -72,15 +72,19 @@ class Visualizer:
                 print("edge.endPoint", edge.endPoint)
                 #print("edge.startPoint", edge.startPoint)
                 print("\n\n edge edge edge")
-                if edge.endPoint != None or edge.endPoint != False:
+                if edge.endPoint != None and edge.endPoint != False:
                     tmp = edge.endPoint
                     if edge.source_state[0] < tmp[0]:
                         edge.target_state = tmp
                     else:
                         edge.source_state = tmp
 
-                if edge.startPoint != None or edge.startPoint != False:
+                if edge.startPoint != None and edge.startPoint != False:
                     tmp = edge.startPoint
+                    print("tmp", tmp)
+                    print("edge.startPoint", edge.startPoint)
+                    print("edge.startPoint == None??", edge.startPoint == None)
+                    print("edge.startPoint == None??", edge.startPoint != None)
                     if edge.source_state[0] > tmp[0]:
                         edge.target_state = tmp
                     else:
