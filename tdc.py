@@ -61,9 +61,10 @@ class TDC:
         self.dbg = False
 
     def readObstacles(self):
+        inputFile = open("input%s.txt"%(sys.argv[1]), "r")
         #inputFile = open("inputfloat.txt", "r")
         #inputFile = open("input3.txt", "r")
-        inputFile = open("input2.txt", "r")
+        #inputFile = open("input2.txt", "r")
         #inputFile = open("input.txt", "r")
         #inputFile = open("input4.txt", "r")
 
@@ -110,7 +111,7 @@ class TDC:
 
                     ceilingEdgeToAdd = Edge()
                     ceilingEdgeToAdd.source_state = obstacle[i]
-                    ceilingEdgeToAdd.target_state = obstacle[i+1]
+                    ceilingEdgeToAdd.target_state = obstacle[(i+1)%len(obstacle)]
                     eventToAdd.ceilingPointer.append(ceilingEdgeToAdd)
 
                     floorEdgeToAdd = Edge()
@@ -281,9 +282,10 @@ class TDC:
                 
                 index_to_close = sweep_line_control[0][0]
                 indices_to_open = sweep_line_control[0]
+                print("index_to_close", index_to_close)
+                print("indices_to_open", indices_to_open)
 
                 cell_to_close = self.open[index_to_close]
-                print("cell_to_close, index_to_close", cell_to_close, index_to_close)
 
                 # Calculations on the cell we are CLOSING
                 c = self.findIntersection(cell_to_close.ceilingList[-1], current_event)
@@ -328,7 +330,8 @@ class TDC:
 
                 # append this to open IS 
                 # its weird becasue you are appending linearly and the number of elements changes
-                self.open.insert(indices_to_open[1],botCell)
+                # THIS IS THE CULPRIT
+                self.open.insert(indices_to_open[0],botCell)
                 self.open.insert(indices_to_open[1],topCell)
     
                 #self.closed[-1].neighborList.insert(0, topCell)
@@ -361,6 +364,7 @@ class TDC:
                 current_cell.ceilingList.append(copy.copy(current_event.ceilingPointer[-1]))
 
             elif current_event.type == "OUT":
+                print("PROCESSING OF THE OUT EVENT")
                 self.connectivity-=1
                 index_to_open = sweep_line_control[0][0]
                 indices_to_close = sweep_line_control[0]
@@ -406,9 +410,6 @@ class TDC:
                 # remove the cells from open
                 self.open.remove(botCell)
                 self.open.remove(topCell)
-
-
-
 
             print("self.connectivity", self. connectivity)
             print("current_intersections", current_intersections)
@@ -473,8 +474,8 @@ class TDC:
 
         x1,y1 = edge.source_state[0], edge.source_state[1]
         x2, y2 = edge.target_state[0], edge.target_state[1]
-        print("x1, y1", x1, y1)
-        print("x2, y2", x2, y2)
+        #print("x1, y1", x1, y1)
+        #print("x2, y2", x2, y2)
 
         line = LineString([(x1, y1), (x2, y2)])
         sweep_line_x = event.location[0]
@@ -561,15 +562,14 @@ if __name__ == "__main__":
     obstacles = tdc.readObstacles()
     tdc.makeEvents(obstacles)
     print("tdc.connectivity", tdc.connectivity)
-    #tdc.makeCells()
     tdc.makeCells2()
 
-    print("\n\n CHECKING THE Cells")
-    for j, cell in enumerate(tdc.closed):
-        print(" NEW Cell ", j, cell)
-        tdc.printCell(cell)
-        print(" ")
-        print(" *** ")
+    #print("\n\n CHECKING THE Cells")
+    #for j, cell in enumerate(tdc.closed):
+    #    print(" NEW Cell ", j, cell)
+    #    tdc.printCell(cell)
+    #    print(" ")
+    #    print(" *** ")
 
 
 
