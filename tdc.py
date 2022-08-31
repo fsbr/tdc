@@ -23,6 +23,12 @@ class Event:
         self.floorPointer = []
         self.ceilingPointer = []
 
+class Interval:
+    def __init__(self):
+        self.top_point = None
+        self.bot_point = None
+        self.safe = False
+
 class Cell:
     def __init__(self):
         self.ceilingList = []
@@ -56,7 +62,8 @@ class TDC:
 
     def readObstacles(self):
         #inputFile = open("inputfloat.txt", "r")
-        inputFile = open("input2.txt", "r")
+        #inputFile = open("input2.txt", "r")
+        inputFile = open("input.txt", "r")
 
         obstacles = []
         lineNumber = 0
@@ -149,8 +156,82 @@ class TDC:
             self.dbgEventsList() 
 
     # slice control?
-    def makeCells2(self):
+    def slice_control(self, current_event, current_intersections):
+        # Input: the event, and a list of the current intersections
+        # Output: Relevant Index to "current" cell 
+        print("INSIDE SLICE CONTROL")
+        print(current_event, current_intersections)
+        event_location = current_event.location
+        event_type = current_event.type
 
+        intervals = []
+        for i in range(0,len(current_intersections)-1): 
+            a = current_intersections[i] 
+            b = current_intersections[i+1]
+            intervals.append((a,b))
+        print("Intervals", intervals)
+        print("corresponding event location", event_location)
+
+        # flag the intervals as OK or NOT OK
+        intervals_with_status = []
+        safe = True
+        if event_type == "IN" or event_type == "OUT":
+            for i in range(0, len(intervals)):
+                print("intervals[i]", intervals[i])
+                if event_location in intervals[i]:
+                    safe = True 
+                else:
+                    safe = not safe 
+                intervals_with_status.append((intervals[i], safe))
+        if event_type == "FLOOR" or event_type == "CEILING":
+            for i in range(0, len(intervals)):
+                print("intervals[i]", intervals[i])
+                intervals_with_status.append((intervals[i], safe))
+                safe = not safe
+
+        print("intervals with status", intervals_with_status)
+        safe_intervals = []
+        for i in range(0, len(intervals_with_status)):
+            if intervals_with_status[i][1] == True:
+                safe_intervals.append(intervals_with_status[i])
+        print("safe intervals", safe_intervals)
+
+        # finally, check the indices that contain the 
+        current_cell_locations = []
+        for i in range(0, len(safe_intervals)):
+            if event_location in safe_intervals[i][0]:
+                print("index of importance", i)
+                current_cell_locations.append(i)
+        print("for the event type", event_type)
+        print("current cell locations", current_cell_locations)
+       
+    def find_all_intersections(self, current_event): 
+        current_intersections = []
+        for r_event in self.reference_events:
+            r_event = r_event[2]
+            #print("r_event", r_event)
+            #print("r_event.ceilingPointer", r_event.ceilingPointer)
+            #print("r_event.floorPointer", r_event.floorPointer)
+            for edges in r_event.ceilingPointer + r_event.floorPointer:
+                intersect = self.findIntersection(edges, current_event)
+                current_intersections.append(intersect)
+
+        ibot = self.findIntersection(self.botEdge, current_event)
+        itop = self.findIntersection(self.topEdge, current_event)
+
+        current_intersections.append(ibot)
+        current_intersections.append(itop)
+        current_intersections = [*set(current_intersections)]
+
+        if False in current_intersections:
+            current_intersections.remove(False)
+
+        # finally sort this by second element
+        current_intersections.sort(key = lambda x: x[1])
+        #print("Post Filter Current Intersections", current_intersections)
+        return current_intersections
+
+    def makeCells2(self):
         initialCell = Cell()
         self.topEdge = Edge()
         self.topEdge.source_state  = (0,  self.yMax)
@@ -176,29 +257,9 @@ class TDC:
             print("curr", curr, current_event)
             print("current_event.location", current_event.location)
             print("current_event.type", current_event.type)
+            current_intersections = self.find_all_intersections(current_event)
+            sweep_line_control_indices = self.slice_control(current_event, current_intersections)
 
-            current_intersections = []
-            for r_event in self.reference_events:
-                r_event = r_event[2]
-                #print("r_event", r_event)
-                #print("r_event.ceilingPointer", r_event.ceilingPointer)
-                #print("r_event.floorPointer", r_event.floorPointer)
-                for edges in r_event.ceilingPointer + r_event.floorPointer:
-                    intersect = self.findIntersection(edges, current_event)
-                    current_intersections.append(intersect)
-
-            ibot = self.findIntersection(self.botEdge, current_event)
-            itop = self.findIntersection(self.topEdge, current_event)
-
-            current_intersections.append(ibot)
-            current_intersections = [*set(current_intersections)]
-
-            if False in current_intersections:
-                current_intersections.remove(False)
-
-            # finally sort this by second element
-            current_intersections.sort(key = lambda x: x[1])
-            print("Post Filter Current Intersections", current_intersections)
 
             if current_event.type == "IN":
                 self.connectivity +=1 
@@ -538,8 +599,8 @@ if __name__ == "__main__":
     obstacles = tdc.readObstacles()
     tdc.makeEvents(obstacles)
     print("tdc.connectivity", tdc.connectivity)
-    tdc.makeCells()
-    #tdc.makeCells2()
+    #tdc.makeCells()
+    tdc.makeCells2()
 
     print(" CHECKING THE Cells")
     for j, cell in enumerate(tdc.closed):
