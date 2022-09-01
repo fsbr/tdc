@@ -14,10 +14,38 @@ class Agent:
         self.transition_elevation = None
         self.number = None
 
+
+    def generate_transition_path(self,start,end, f):
+        # a list of waypoints that 
+        z = self.transition_elevation
+        print("transition elevation to be added into the waypoint", z)
+        print("start point", start) 
+        print("end point", end) 
+        intermediate_xs = np.arange(start[0], end[0], 1)    
+        m = (end[1] - start[1])/(end[0] - start[0])
+        b = end[1] - m*end[0]
+        intermediate_ys = m*intermediate_xs + b
+        for x,y in zip(intermediate_xs, intermediate_ys):
+            transition_path = (x,y,z)
+            print("transition_path", transition_path)
+            f.write("%s,%s,%s\n"%(transition_path[0], transition_path[1], transition_path[2]))
+
     def format_waypoints_printable(self):
-        f = open("output_file_agent%s.csv", "w")
-        f.write(waypoints_list)
+        f = open("output_file_agent%s.csv"%self.number, "w")
+        #f.write(str(self.waypoints_list))
+        for ii, waypoint_set in enumerate(self.waypoints_list):
+            #f.write(str(waypoint_set)+"\n")
+            for waypoint in waypoint_set:
+                f.write("%s,%s,%s\n"%(waypoint[0],waypoint[1],waypoint[2]))
+            # between waypoint sets generate the transition waypoints except  
+            start = waypoint_set[-1]
+            # end point is the next cells first waypoint
+            end = self.waypoints_list[(ii+1)%len(self.waypoints_list)][0]
+            print(start) 
+            print(end)
+            transition_waypoints = self.generate_transition_path(start, end, f)
         # outputting the waypoints with safe transition elevations
+        f.close()
         
 def bfs(tdcInstance):
     cells = tdcInstance.closed
@@ -127,7 +155,7 @@ def get_waypoints(tdcInstance):
     print(cells)
     agent_list = []
     colors = ["blue", "green", "red", "orange"]
-    for i in len(colors):
+    for i in range(0, len(colors)):
         agent_to_add = Agent()
         agent_to_add.transition_elevation = elevations[i]
         agent_to_add.number = i
@@ -205,4 +233,5 @@ def get_waypoints(tdcInstance):
         plt.xlim((0, tdcInstance.xMax))
         plt.ylim((0, tdcInstance.yMax))
         plt.axis("equal")
-        plt.show()
+        #plt.show()
+    return agent_list 

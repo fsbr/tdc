@@ -581,7 +581,9 @@ if __name__ == "__main__":
 
     # output waypoints
     print("\n\nGETTING THE WAYPOINTS\n\n")
-    waypoints = planners.get_waypoints(tdc)
+    agent_list = planners.get_waypoints(tdc)
+    for agent in agent_list:
+        agent.format_waypoints_printable()
 
     print("\n\n DONE GETTING WAYPOINTS\n\n")
     gv = Visualizer(tdc)
