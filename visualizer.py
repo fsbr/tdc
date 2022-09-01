@@ -38,8 +38,8 @@ class Visualizer:
             if edge.target_state[0] > cmaxx:
                 cmaxx = edge.target_state[0]
                 cmaxy = edge.target_state[1]
-        print("ceiling points", cminx, cminy)
-        print("ceiling points", cmaxx, cmaxy)
+        #print("ceiling points", cminx, cminy)
+        #print("ceiling points", cmaxx, cmaxy)
         return ((cminx, cminy) , (cmaxx, cmaxy))
 
     def plotAll(self):
@@ -97,22 +97,24 @@ class Visualizer:
                 #print("Target Coordinate is, %s, %s"%(edge.target_state[0], edge.target_state[1]))
                 
 
+                # this is plotting the floor/ceiling
                 plt.plot(xs, ys, color = colors[jj%len(colors)])
 
            
+            # whats meant by ENDPOINTS is the vertical extensions
             ce = self.getEndpoints(cell.ceilingList)
             fe = self.getEndpoints(cell.floorList)
-            print("ce", ce)
-            print("fe", fe)
+            #print("ce", ce)
+            #print("fe", fe)
             vminx = [ce[0][0], fe[0][0]]
             vminy = [ce[0][1], fe[0][1]]
             vmaxx = [ce[-1][0], fe[-1][0]]
             vmaxy = [ce[-1][1], fe[-1][1]]
             plt.plot(vminx, vminy, color = colors[jj%len(colors)])
             plt.plot(vmaxx, vmaxy, color = colors[jj%len(colors)])
-        #plt.axis("equal")
-        plt.xlim((-10,15))
-        plt.ylim((-10,15))
+        plt.xlim((-10,self.tdc.xMax + 5))
+        plt.ylim((-10,self.tdc.yMax + 5))
+        plt.axis("equal")
 
         plt.title("Boustro Decomposition")
         plt.show()

@@ -3,7 +3,9 @@ import sys
 import heapq
 import copy
 from shapely.geometry import LineString
+
 from visualizer import Visualizer
+import planners
 
 class Edge:
     def __init__(self):
@@ -262,7 +264,6 @@ class TDC:
         # place the initial cell into the open list
         self.open.append(initialCell)
         while len(self.eventsList) > 0:
-            
 
             curr = heapq.heappop(self.eventsList)
             current_event = curr[2]
@@ -505,7 +506,6 @@ class TDC:
         else:
             return False
 
-
     # DEBUGGING STUFF TO MAKE MY LIFE EASIER
     def dbgEventsList(self):    
         print("\nCHECKING EVENTS LIST\n\n")
@@ -564,16 +564,26 @@ if __name__ == "__main__":
     print("tdc.connectivity", tdc.connectivity)
     tdc.makeCells2()
 
-    #print("\n\n CHECKING THE Cells")
-    #for j, cell in enumerate(tdc.closed):
-    #    print(" NEW Cell ", j, cell)
-    #    tdc.printCell(cell)
-    #    print(" ")
-    #    print(" *** ")
+    print("\n\n CHECKING THE Cells")
+    for j, cell in enumerate(tdc.closed):
+        print(" NEW Cell ", j, cell)
+        tdc.printCell(cell)
+        print(" ")
+        print(" *** ")
 
 
 
+    # do the planner here
+    print("DOING THE PLANNING")
+    result = planners.bfs(tdc)
+    result2 = planners.dfs(tdc)
+    print("result", result)
 
+    # output waypoints
+    print("\n\nGETTING THE WAYPOINTS\n\n")
+    waypoints = planners.get_waypoints(tdc)
+
+    print("\n\n DONE GETTING WAYPOINTS\n\n")
     gv = Visualizer(tdc)
     gv.printStuff()
     gv.floorAndCeilingEdges()
