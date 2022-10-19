@@ -147,8 +147,8 @@ def get_waypoints(tdcInstance):
     yMax = tdcInstance.yMax
     
     # each quadcopter will fly at its own elevation, z coordinate
-    elevation_base = 3 
-    elevations = [elevation_base, elevation_base + 1, elevation_base +2, elevation_base+3]
+    elevation_base = 14 
+    elevations = [elevation_base+1, elevation_base + 2, elevation_base +3, elevation_base+4]
     safety_boundary = 0.5
     lap_width = 1
 
