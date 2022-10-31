@@ -83,7 +83,7 @@ def dfs(tdcInstance):
 
 
 def boustro_endpoints(ceil_floor_list, jj):
-    colors = ["blue", "green", "red", "orange"]
+    colors = ["blue", "green", "red", "orange", "black"]
     xs, ys = [], []
     # what this loop is suppose to do is assign source_state and target_state based on the 
     # thing, f,c 
@@ -148,13 +148,13 @@ def get_waypoints(tdcInstance):
     
     # each quadcopter will fly at its own elevation, z coordinate
     elevation_base = 14 
-    elevations = [elevation_base+1, elevation_base + 2, elevation_base +3, elevation_base+4]
+    elevations = [elevation_base+1, elevation_base + 2, elevation_base +3, elevation_base+4, elevation_base+5]
     safety_boundary = 0.5
     lap_width = 1
 
     print(cells)
     agent_list = []
-    colors = ["blue", "green", "red", "orange"]
+    colors = ["blue", "green", "red", "orange", "black"]
     for i in range(0, len(colors)):
         agent_to_add = Agent()
         agent_to_add.transition_elevation = elevations[i]
@@ -197,7 +197,8 @@ def get_waypoints(tdcInstance):
         print("max, min", x_max, x_min)
 
         # intention: sweep from x_min to x_max, in intervals of lap_width
-        x_range = np.arange(x_min, x_max+1, lap_width) 
+        #x_range = np.arange(x_min, x_max+1, lap_width)  original
+        x_range = np.arange(x_min+0.5, x_max, lap_width) 
         print(x_range)
         flip = True
         for x in x_range:

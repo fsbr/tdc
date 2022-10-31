@@ -53,7 +53,7 @@ class Visualizer:
                 ys.append(vertex[1])
             #plt.plot(xs+[xs[0]], ys+[ys[0]])
 
-        colors = ["blue", "red", "green", "orange"]
+        colors = ["blue", "red", "green", "orange", "black"]
         for jj, cell in enumerate(self.tdc.closed):
             # this function is trying to do too much since it is plotting and processing the cell somehow
             #print("\n\n NEW CELL \n\n")
@@ -116,6 +116,8 @@ class Visualizer:
         plt.ylim((-10,self.tdc.yMax + 5))
         plt.axis("equal")
 
+        plt.xlabel("x (meters)")
+        plt.ylabel("y (meters)")
         plt.title("Boustro Decomposition")
         plt.show()
 
