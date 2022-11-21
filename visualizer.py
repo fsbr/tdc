@@ -54,6 +54,7 @@ class Visualizer:
             #plt.plot(xs+[xs[0]], ys+[ys[0]])
 
         colors = ["blue", "red", "green", "orange", "black"]
+        #optimal_ordering = [0,1,3,4,7,2,8,5,6,9]
         for jj, cell in enumerate(self.tdc.closed):
             # this function is trying to do too much since it is plotting and processing the cell somehow
             #print("\n\n NEW CELL \n\n")
@@ -98,7 +99,8 @@ class Visualizer:
                 
 
                 # this is plotting the floor/ceiling
-                plt.plot(xs, ys, color = colors[jj%len(colors)])
+                plt.plot(xs, ys, color = colors[  jj%len(colors)]  )
+                #plt.plot(xs, ys, color = colors[  optimal_ordering[jj]%len(colors)]  )
 
            
             # whats meant by ENDPOINTS is the vertical extensions
@@ -112,6 +114,8 @@ class Visualizer:
             vmaxy = [ce[-1][1], fe[-1][1]]
             plt.plot(vminx, vminy, color = colors[jj%len(colors)])
             plt.plot(vmaxx, vmaxy, color = colors[jj%len(colors)])
+            #plt.plot(vminx, vminy, color = colors[optimal_ordering[jj]%len(colors)])
+            #plt.plot(vmaxx, vmaxy, color = colors[optimal_ordering[jj]%len(colors)])
         plt.xlim((-10,self.tdc.xMax + 5))
         plt.ylim((-10,self.tdc.yMax + 5))
         plt.axis("equal")

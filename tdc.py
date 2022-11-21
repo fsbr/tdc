@@ -48,6 +48,9 @@ class Cell:
         self.minCeiling = None
         self.maxCeiling = None
 
+        self.cost = 0
+        self.WP = []
+
 class TDC:
     def __init__(self):
         self.eventsList = []
@@ -558,6 +561,7 @@ class TDC:
         
 
 if __name__ == "__main__":
+    f3 = open("cell_costs.csv", "w")
     tdc = TDC()
     obstacles = tdc.readObstacles()
     tdc.makeEvents(obstacles)
@@ -570,6 +574,7 @@ if __name__ == "__main__":
         tdc.printCell(cell)
         print(" ")
         print(" *** ")
+    
 
 
 
@@ -582,9 +587,15 @@ if __name__ == "__main__":
     # output waypoints
     print("\n\nGETTING THE WAYPOINTS\n\n")
     agent_list = planners.get_waypoints(tdc)
+    for cell in tdc.closed:
+        f3.write( str(cell.cost)+",")
+        f3.write( str(cell.WP[0][0])+","+ str(cell.WP[0][1]) + "," + str(cell.WP[0][2])+ "," )
+        f3.write( str(cell.WP[-1][0])+","+ str(cell.WP[-1][1]) + "," + str(cell.WP[-1][2]) )
+        f3.write("\n")
+    
     for agent in agent_list:
         agent.format_waypoints_printable()
-
+    
     print("\n\n DONE GETTING WAYPOINTS\n\n")
     gv = Visualizer(tdc)
     gv.printStuff()

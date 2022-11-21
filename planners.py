@@ -9,6 +9,7 @@ class Agent:
     def __init__(self):
         # each element of waypoints_list is the list of waypoints for a particular cell
         self.waypoints_list = []
+        self.costs = []
 
         # an altitude we assign the drone to prevent collisions
         self.transition_elevation = None
@@ -34,6 +35,7 @@ class Agent:
         f = open("output_file_agent%s.csv"%self.number, "w")
         #f.write(str(self.waypoints_list))
         for ii, waypoint_set in enumerate(self.waypoints_list):
+            cost_estimate = 0
             #f.write(str(waypoint_set)+"\n")
             for waypoint in waypoint_set:
                 f.write("%s,%s,%s\n"%(waypoint[0],waypoint[1],waypoint[2]))
@@ -44,6 +46,8 @@ class Agent:
             print(start) 
             print(end)
             transition_waypoints = self.generate_transition_path(start, end, f)
+
+            #f2.write(str(cost_estimate)+"\n")
         # outputting the waypoints with safe transition elevations
         f.close()
         
@@ -84,6 +88,7 @@ def dfs(tdcInstance):
 
 def boustro_endpoints(ceil_floor_list, jj):
     colors = ["blue", "green", "red", "orange", "black"]
+    #optimal_ordering = [0,1,3,4,7,2,8,4,6,9]
     xs, ys = [], []
     # what this loop is suppose to do is assign source_state and target_state based on the 
     # thing, f,c 
@@ -105,7 +110,9 @@ def boustro_endpoints(ceil_floor_list, jj):
     
         xs = [edge.source_state[0], edge.target_state[0]]
         ys = [edge.source_state[1], edge.target_state[1]]
+        # chnage this back to fix
         plt.plot(xs, ys, color = colors[jj%len(colors)])
+        #plt.plot(xs, ys, color = colors[ optimal_ordering[jj]%len(colors)]  )
         edges_for_boustro.append( (xs,ys) )
     return edges_for_boustro
 
@@ -142,6 +149,7 @@ def boundary_intersections(yMax, line, x):
 
 def get_waypoints(tdcInstance):
     # this function needs to examine the edges in each cell, and output waypoints that DB can use in his demo
+    f3 = open("costs.csv", "a")
     cells = tdcInstance.closed
     xMax = tdcInstance.xMax
     yMax = tdcInstance.yMax
@@ -149,9 +157,10 @@ def get_waypoints(tdcInstance):
     # each quadcopter will fly at its own elevation, z coordinate
     elevation_base = 14 
     elevations = [elevation_base+1, elevation_base + 2, elevation_base +3, elevation_base+4, elevation_base+5]
-    safety_boundary = 0.5
+    safety_boundary = 1 #0.5
     lap_width = 1
 
+    #optimal_ordering = [0,1,3,4,7,2,8,4,6,9]
     print(cells)
     agent_list = []
     colors = ["blue", "green", "red", "orange", "black"]
@@ -166,12 +175,17 @@ def get_waypoints(tdcInstance):
         waypoints = []
         # this function is trying to do too much since it is plotting and processing the cell somehow
         #print("\n\n NEW CELL \n\n")
+
+        # to fix my code
+        edges_idx = jj 
+        print("jj ", jj)
+        #edges_idx = optimal_ordering[jj]
         xs, ys = [], []
         leftmost_x = np.Inf
         rightmost_x = -np.Inf 
         leftmost_y, rightmost_y = [],[]
-        ceiling_edges = boustro_endpoints(cell.ceilingList, jj)    
-        floor_edges = boustro_endpoints(cell.floorList, jj)    
+        ceiling_edges = boustro_endpoints(cell.ceilingList, edges_idx)    
+        floor_edges = boustro_endpoints(cell.floorList, edges_idx)    
         
         print("EDGES IN WAYPOINT GENERATION")
         print(ceiling_edges)
@@ -218,7 +232,7 @@ def get_waypoints(tdcInstance):
             #print("ceil int", ceil_int)
             #print("y_min", y_min)
             #print("y_max", y_max)
-            y_steps = np.arange(y_min, y_max, lap_width)
+            y_steps = np.arange(y_min, y_max+1.0, lap_width)
             #print("y_steps", y_steps) 
             #print("x", x)
             if flip == False:
@@ -227,6 +241,18 @@ def get_waypoints(tdcInstance):
                 waypoints.append((x, step, elevation_base))
                 plt.scatter(x, step, c="k", s=0.5)
             flip = not flip
+
+        # i think we are done with the waypoints there
+        d = 0
+        for xx in range(0, len(waypoints)-1):
+            d += np.sqrt(
+                    (waypoints[xx][0]-waypoints[xx+1][0])**2 + 
+                    (waypoints[xx][1]-waypoints[xx+1][1])**2 + 
+                    (waypoints[xx][2]-waypoints[xx+1][2])**2  
+                    )
+        cell.cost = d
+        cell.WP = waypoints
+            
         agent_to_update = agent_list[jj%len(agent_list)]
         agent_to_update.waypoints_list.append(waypoints)
         print("jj", jj)
